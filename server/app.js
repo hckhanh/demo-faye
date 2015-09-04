@@ -9,11 +9,12 @@ var app = express(),
 
 var bayeux = new faye.NodeAdapter({ mount: '/chat' });
 bayeux.attach(server);
+var client = bayeux.getClient();
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.use('/js', express.static('node_modules/faye/browser'));
+// app.use('/js', express.static('node_modules/faye/browser'));
 
 app.use('/js', express.static('bower_components/jquery/dist'));
 
@@ -28,57 +29,40 @@ app.use('/', require('./routes'));
 
 var users = [];
 
-function getUser (clientId, callback) {
+function getUser (userId, callback) {
 	for (var i = users.length - 1; i >= 0; i--) {
-		if (users[i]._id == clientId) {
+		if (users[i].id === userId) {
 			callback(i, users[i]);
 		}
 	};
 	callback();
 }
 
-function removeUser (clientId) {
+function removeUser (userId) {
 	for (var i = users.length - 1; i >= 0; i--) {
-		if (users._id == clientId)
+		if (users.id === userId)
 			users.splice(i, 1);
 	};
 }
 
-bayeux.on('subscribe', function (clientId, channel) {
-	if (channel == '/join') {
-		users.push({ _id: clientId, username: '' });
-	}
+function addUser (userId, username) {
+	users.push({ id: userId, username: username });
+}
+
+client.subscribe('/register', function (message) { // message: { sessionId: String, username: String }
+	addUser(message.sessionId, message.username);
+
+	client.publish('/register/' + message.sessionId, { userId: message.sessionId });
+	client.publish('/join', { text: '<b>' + message.username + '</b> has joined.' });
 });
 
-bayeux.on('disconnect', function (clientId) {
-	getUser(clientId, function (index, user) {
+client.subscribe('/public/server', function (message) { // message: { userId: String, text: String }
+	getUser(message.userId, function (index, user) {
 		if (!user) return;
 
-		bayeux.getClient().publish('/public', { text: '<b>' + user.username + '</b> has left.' });
-		users.splice(index, 1);
+		client.publish('/public', { text: '<b>' + user.username + '</b>: ' + message.text });
 	});
 });
 
-bayeux.on('unsubscribe', function (clientId, channel) {
-	if (channel == '/public') {
-		removeUser(clientId);
-	}
-});
-
-bayeux.on('publish', function (clientId, channel, message) {
-	switch (channel) {
-		case '/register':
-			getUser(clientId, function (index, user) {
-				user.username = message.text;
-				bayeux.getClient().publish('/join', { text: '<b>' + user.username + '</b> has joined.' });
-			});
-			break;
-		case '/server/public':
-			getUser(clientId, function (index, user) {
-				bayeux.getClient().publish('/public', { text: '<b>' + user.username + '</b> ' + message.text });
-			});
-			break;
-	}
-});
 
 server.listen(8001);

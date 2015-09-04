@@ -22,23 +22,26 @@
 
 		<script>
 			var client = new Faye.Client('http://localhost:8001/chat');
+			var user = {};
 
-			var join = client.subscribe('/join', function (message) {
-				insertMsg(message);
-			});
+			client
+				.subscribe('/public', insertMsg)
+				.then(function () {
+					user.username = prompt('What is your username?');
+					var sessionId = Date.now().toString();
+					client.publish('/register', { sessionId: sessionId, username: user.username });
+					var register = client.subscribe('/register/' + sessionId, function (message) {
+						user.id = message.userId;
+						register.cancel();
+					});
+				});
 
-			join.then(function () {
-				nickname = prompt('What is your nickname?');
-				client.publish('/register', { text: nickname });
-			});
-
-			client.subscribe('/public', insertMsg);
+			client.subscribe('/join', insertMsg);
 
 			$('#chat_form').submit(function (e) {
 				var msg = $('#msg').val();
 				if (msg) {
-					insertMsg(nickname + ': ' + msg);
-					client.publish('/server/public', { text: msg });
+					client.publish('/public/server', { userId: user.id, text: msg });
 					$('#msg').val('');
 				}
 
