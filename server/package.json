@@ -4,7 +4,7 @@
   "description": "Demo Faye server",
   "main": "app.js",
   "scripts": {
-    "prestart": "npm install",
+    "prestart": "npm install && bower install",
     "start": "forever start --minUptime 5000 --spinSleepTime 5000 app.js",
     "stop": "forever stop app.js",
     "mongod": "mongod --dbpath /usr/local/data/ --logpath /var/log/mongodb/mongodb.log --fork"
