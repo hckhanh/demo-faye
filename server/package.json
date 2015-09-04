@@ -1,0 +1,41 @@
+{
+  "name": "server",
+  "version": "0.0.1",
+  "description": "Demo Faye server",
+  "main": "app.js",
+  "scripts": {
+    "prestart": "npm install",
+    "start": "forever start --minUptime 5000 --spinSleepTime 5000 app.js",
+    "stop": "forever stop app.js",
+    "mongod": "mongod --dbpath /usr/local/data/ --logpath /var/log/mongodb/mongodb.log --fork"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hckhanh/demo-faye.git"
+  },
+  "keywords": [
+    "faye",
+    "node",
+    "nodejs",
+    "node.js",
+    "javascript",
+    "js",
+    "real-time",
+    "chat"
+  ],
+  "author": "Khanh Hoang",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hckhanh/demo-faye/issues"
+  },
+  "dependencies": {
+    "body-parser": "~1.13.3",
+    "express": "~4.13.3",
+    "faye": "~1.1.2",
+    "mongoose": "~4.1.5"
+  },
+  "devDependencies": {
+    "gulp": "~3.9.0",
+    "nodemon": "~1.4.1"
+  }
+}

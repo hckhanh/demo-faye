@@ -1,0 +1,1 @@
+var chat.model = require('../models/chat.model');
