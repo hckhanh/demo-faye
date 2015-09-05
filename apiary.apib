@@ -39,10 +39,10 @@ You can enter the web chat interface with this API.
 
 ### Mechanism
 
-When a **User** connects to **Server**. He will input his `username` and pushes his `sessionId` and `username` to the **Server**.
-After that, the **Server** save the **User** information and response `userId` to **User**.
-When he pushes a message. The **Server** will receive it and broadcasts to the others.
-When a user *joins* or *leave* the room. Other people will be *notified* by **Server**.
+`. When a **User** connects to **Server**. He will input his `username` and pushes his `sessionId` and `username` to the **Server**.
+2. After that, the **Server** save the **User** information and response `userId` to **User**.
+3. When he pushes a message. The **Server** will receive it and broadcasts to the others.
+4. When a user *joins* or *leave* the room. Other people will be *notified* by **Server**.
 
 ### Register a new user [/chat/register]
 
@@ -60,8 +60,6 @@ When a user *joins* or *leave* the room. Other people will be *notified* by **Se
 
 ### Get userId from Server [/chat/register/{sessionId}]
 
-**Server** will send the `userId` to **User** through this API. After **User** send `username` to **Server**
-
 + Parameters
     + sessionId: 1441428112793 (required, string) - The current sessionId of the user
 
@@ -74,8 +72,6 @@ When a user *joins* or *leave* the room. Other people will be *notified* by **Se
 
 ### Send message to users [/chat/public]
 
-The **Server** will send message to the users through this api.
-
 ### Receive message from server [GET]
 
 + Attributes
@@ -86,6 +82,7 @@ The **Server** will send message to the users through this api.
 ### Send message to server [/chat/public/server]
 
 Due to the structure of **Faye**, we have to use **another** channel to transfer message from Client to Server.
+
 > **Note:** a channel must have a **single responsibility** to maintain the **stability** of the application.
 >
 > A channel will be a **publisher** or **subscriber**.
