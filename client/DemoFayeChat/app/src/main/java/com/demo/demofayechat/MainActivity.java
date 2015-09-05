@@ -105,8 +105,6 @@ public class MainActivity extends AppCompatActivity /*implements FayeClient.Faye
 
                                             publicServerChannel.connect();
                                             joinChannel.connect();
-                                            //registerChannel.disconnect();
-                                            //registerWithIdChannel.disconnect();
                                             Log.i("demo-faye", "Received register information");
                                         } catch (JSONException e) {
                                             Log.e(getClass().getName(), "Cannot parse to json obj", e);
