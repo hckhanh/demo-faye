@@ -14,8 +14,6 @@ var client = bayeux.getClient();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// app.use('/js', express.static('node_modules/faye/browser'));
-
 app.use('/js', express.static('bower_components/jquery/dist'));
 
 app.use(express.static('public'));
@@ -50,10 +48,12 @@ function addUser (userId, username) {
 }
 
 client.subscribe('/register', function (message) { // message: { sessionId: String, username: String }
+	console.log('Register new user');
 	addUser(message.sessionId, message.username);
 
 	client.publish('/register/' + message.sessionId, { userId: message.sessionId });
 	client.publish('/join', { text: '<b>' + message.username + '</b> has joined.' });
+	console.log('Sent user register information');
 });
 
 client.subscribe('/public/server', function (message) { // message: { userId: String, text: String }

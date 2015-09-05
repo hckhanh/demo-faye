@@ -27,13 +27,16 @@
 			client
 				.subscribe('/public', insertMsg)
 				.then(function () {
-					user.username = prompt('What is your username?');
-					var sessionId = Date.now().toString();
-					client.publish('/register', { sessionId: sessionId, username: user.username });
-					var register = client.subscribe('/register/' + sessionId, function (message) {
-						user.id = message.userId;
-						register.cancel();
-					});
+					if (user.username = prompt('What is your username?')) {
+						var sessionId = Date.now().toString();
+						client.publish('/register', { sessionId: sessionId, username: user.username });
+						var register = client.subscribe('/register/' + sessionId, function (message) {
+							user.id = message.userId;
+							register.cancel();
+						});
+					} else {
+						insertMsg({ text: 'You must have a name, don\'t you?' });
+					}
 				});
 
 			client.subscribe('/join', insertMsg);

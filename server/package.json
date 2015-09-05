@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "0.0.1",
+  "version": "1.2.1",
   "description": "Demo Faye server",
   "main": "app.js",
   "scripts": {
