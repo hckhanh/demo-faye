@@ -1,87 +1,112 @@
 FORMAT: 1A
-HOST: http://code2learn.me
+HOST: http://localhost:8001
 
-# demofaye
+# demo-faye
 
-Polls is a simple API allowing consumers to view polls and vote in them.
+This is API blueprint document for my demo on Faye for **Android** and **Node.js**
 
-## Questions Collection [/questions]
+## Structures
 
-### List All Questions [GET]
+### Client side
 
-+ Response 200 (application/json)
+This app has two component, Android and Web app.
+You can use web app by hit the main page.
 
-        [
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 2048
-                    }, {
-                        "choice": "Python",
-                        "votes": 1024
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 512
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 256
-                    }
-                ]
-            }
-        ]
-        
-+ Response 404 (application/json)
+1. Android app
 
-        {
-            error: 404,
-            message: Not found
-        }
+2. Web app
 
-### Create a New Question [POST]
+## Server side
 
-You may create your own question using this action. It takes a JSON
-object containing a question and a collection of answers in the
-form of choices.
+The main duty of `Server side` is register new user and receiver user message and response to the others.
+
+# Web App [/]
+
+You can enter the web chat interface with this API.
+
+## Open Web App [GET]
+
++ Response 200 (text/html)
+
+## Group Chat API
+
+### Functions
+
+* Register a new user
+* Receive message from Server
+* Send message to Server
+* Notify others user whether a user is joined or left.
+
+### Mechanism
+
+When a **User** connects to server. He will input his username and push his `sessionId` and `username` to the **Server**.
+After that, the **Server** will save the **User** information to database and response the `userId` to **User**.
+Now, he can talk to other users. When he push a message. The **Server** will receive it and broadcasts to the others.
+When a user *joins* or *leave* the room. Other people will be *notified* by **Server**.
+
+### Register a new user [/chat/register]
+
+**User** connects to the **Server** and acquire a `userId` 
+
+#### Send user information [POST]
+
++ Attributes
+    + sessionId: 1441428112793 (required, string) - The current sessionId of the user
+    + username: user (required, string) - Username of the user
 
 + Request (application/json)
 
-        {
-            "question": "Favourite programming language?",
-            "choices": [
-                "Swift",
-                "Python",
-                "Objective-C",
-                "Ruby"
-            ]
-        }
++ Response 200 (application/json)
+
+### Get userId from Server [/chat/register/{sessionId}]
+
+**Server** will send the `userId` to **User** through this API. After **User** send `username` to **Server**
+
++ Parameters
+    + sessionId: 1441428112793 (required, string) - The current sessionId of the user
+
+#### Get userId [GET]
+
++ Attributes
+    + userId: 1441428112793 (required, string) - The unique id of the user
 
 + Response 201 (application/json)
 
-    + Headers
+### Send message to users [/chat/public]
 
-            Location: /questions/2
+The **Server** will send message to the users through this api.
 
-    + Body
+### Receive message from server [GET]
 
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
-                    }
-                ]
-            }
++ Attributes
+    + text: user: message (required, string) - Message from user
+
++ Response 201 (application/json)
+
+### Send message to server [/chat/public/server]
+
+Due to the structure of **Faye**, we have to use **another** channel to transfer message from Client to Server.
+> **Note:** a channel must have a **single responsibility** to maintain the **stability** of the application.
+>
+> A channel will be a **publisher** or **subscriber**.
+
+#### Send message [POST]
+
++ Attributes
+    + userId: 1441428112793 (required, string) - The unique id of the user
+    + text: message (required, string) - Message from user
+
++ request (application/json)
+
++ response 200
+
+### Notify user status to the others [/chat/join]
+
+When a user join or log out, their status will be notified to the others.
+
+#### Notify user status [GET]
+
++ Attributes
+    + text: user has joined. (required, string) - User status
+
++ response 200 (application/json)
