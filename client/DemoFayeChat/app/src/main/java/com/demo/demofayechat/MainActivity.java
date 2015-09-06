@@ -2,7 +2,6 @@ package com.demo.demofayechat;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
 import android.util.Log;
@@ -20,7 +19,6 @@ import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity /*implements FayeClient.FayeListener*/ {
 
-    Handler handler = new Handler(Looper.getMainLooper());
     boolean isEnterName = false;
 
     TextView textMessage;
@@ -59,23 +57,22 @@ public class MainActivity extends AppCompatActivity /*implements FayeClient.Faye
                         String sessionId = String.valueOf(System.currentTimeMillis());
                         jsonMsg.put("sessionId", sessionId);
                         jsonMsg.put("username", msg);
-                        registerChannel = new Channel(mainThreadHandler, "http://10.0.2.2:8001/chat", "/register", null);
+                        registerChannel = new Channel(mainThreadHandler, "ws://10.0.2.2:8001/chat", "/register", null);
                         registerChannel.setOnSubscribedListener(new Channel.OnSubscribedListener() {
                             @Override
-                            public void onSubscribed(String subscription) {
+                            public void onSubscribed(final String subscription) {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
                                         registerChannel.sendMessage(jsonMsg);
                                         isEnterName = true;
+                                        Log.i("demo-faye", "Sent register information: " + subscription);
                                     }
                                 });
-                                Log.i("demo-faye", "Sent register information");
                             }
                         });
-                        registerChannel.connect();
 
-                        registerWithIdChannel = new Channel(mainThreadHandler, "http://10.0.2.2:8001/chat", "/register/" + sessionId, null);
+                        registerWithIdChannel = new Channel(mainThreadHandler, "ws://10.0.2.2:8001/chat", "/register/" + sessionId, null);
                         registerWithIdChannel.setOnMessageReceivedListener(new Channel.OnMessageReceivedListener() {
                             @Override
                             public void onMessageReceived(final JSONObject message) {
@@ -84,27 +81,6 @@ public class MainActivity extends AppCompatActivity /*implements FayeClient.Faye
                                     public void run() {
                                         try {
                                             userId = message.getString("userId");
-                                            publicServerChannel = new Channel(mainThreadHandler, "http://10.0.2.2:8001/chat", "/public/server", null);
-
-                                            joinChannel = new Channel(mainThreadHandler, "http://10.0.2.2:8001/chat", "/join", null);
-                                            joinChannel.setOnMessageReceivedListener(new Channel.OnMessageReceivedListener() {
-                                                @Override
-                                                public void onMessageReceived(final JSONObject message) {
-                                                    runOnUiThread(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            try {
-                                                                textMessage.append(Html.fromHtml(message.getString("text")));
-                                                            } catch (JSONException e) {
-                                                                Log.e(getClass().getName(), "text attr is not existed", e);
-                                                            }
-                                                        }
-                                                    });
-                                                }
-                                            });
-
-                                            publicServerChannel.connect();
-                                            joinChannel.connect();
                                             Log.i("demo-faye", "Received register information");
                                         } catch (JSONException e) {
                                             Log.e(getClass().getName(), "Cannot parse to json obj", e);
@@ -113,8 +89,17 @@ public class MainActivity extends AppCompatActivity /*implements FayeClient.Faye
                                 });
                             }
                         });
+
                         registerWithIdChannel.connect();
+                        registerChannel.connect();
                     } else {
+                        if (registerChannel != null) {
+                            registerChannel.disconnect();
+                            registerWithIdChannel.disconnect();
+
+                            registerChannel = registerWithIdChannel = null;
+                        }
+
                         JSONObject jsonMsg = new JSONObject();
                         jsonMsg
                                 .put("userId", userId)
@@ -132,7 +117,7 @@ public class MainActivity extends AppCompatActivity /*implements FayeClient.Faye
     protected void onStart() {
         super.onStart();
 
-        publicChannel = new Channel(mainThreadHandler, "http://10.0.2.2:8001/chat", "/public", null);
+        publicChannel = new Channel(mainThreadHandler, "ws://10.0.2.2:8001/chat", "/public", null);
         publicChannel.setOnSubscribedListener(new Channel.OnSubscribedListener() {
             @Override
             public void onSubscribed(String subscription) {
@@ -165,7 +150,28 @@ public class MainActivity extends AppCompatActivity /*implements FayeClient.Faye
             }
         });
 
+        publicServerChannel = new Channel(mainThreadHandler, "ws://10.0.2.2:8001/chat", "/public/server", null);
+
+        joinChannel = new Channel(mainThreadHandler, "ws://10.0.2.2:8001/chat", "/join", null);
+        joinChannel.setOnMessageReceivedListener(new Channel.OnMessageReceivedListener() {
+            @Override
+            public void onMessageReceived(final JSONObject message) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            textMessage.append(Html.fromHtml(message.getString("text")));
+                        } catch (JSONException e) {
+                            Log.e(getClass().getName(), "text attr is not existed", e);
+                        }
+                    }
+                });
+            }
+        });
+
         publicChannel.connect();
+        publicServerChannel.connect();
+        joinChannel.connect();
         /*publicChannel = new FayeClient(handler, URI.create("http://10.0.2.2:8001/chat"), "/public");
         publicChannel.setFayeListener(this);
         publicChannel.connectToServer(null);
